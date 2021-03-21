@@ -35,15 +35,15 @@ impl GuessGame {
         let guessed_num = parse_res.unwrap();
         let mut generator = self.rand_gen;
 
-        let secret_number: i16 = generator.gen_range(self.min_num..self.max_num);
+        let secret_number: i16 = generator.gen_range(self.min_num..=self.max_num);
 
-        return if guessed_num != secret_number {
+        return if guessed_num == secret_number {
+            Ok(secret_number)
+        } else {
             Err(format!(
-                "GAME OVER, You guessed = {}, correct number was = {}",
+                "WRONG, You guessed = {}, correct number was = {}",
                 guessed_num, secret_number
             ))
-        } else {
-            Ok(secret_number)
         };
     }
 }
@@ -53,22 +53,26 @@ fn main() {
 
     println!("Guess the number!");
 
-    println!("Please input your guess.");
+    loop {
+        println!("Please input your guess.");
 
-    let mut guess = String::new();
+        let mut guess = String::new();
 
-    stdin().read_line(&mut guess).expect("Failed to read line");
+        stdin().read_line(&mut guess).expect("Failed to read line");
 
-    let guess_game = GuessGame::new(Box::new(thread_rng()));
+        let guess_game = GuessGame::new(Box::new(thread_rng()));
 
-    let result = guess_game.play_round(&guess);
-    if result.is_ok() {
-        println!(
-            "CONGRATS, YOU WON!!! Your lucky number is: {luckyNum}",
-            luckyNum = result.unwrap()
-        )
-    } else {
-        eprintln!("{msg}", msg = result.unwrap_err())
+        let result = guess_game.play_round(&guess);
+        if result.is_ok() {
+            println!(
+                "CONGRATS, YOU WON!!! Your lucky number is: {luckyNum}",
+                luckyNum = result.unwrap()
+            );
+            break;
+        } else {
+            eprintln!("{msg}", msg = result.unwrap_err());
+            continue;
+        }
     }
 }
 
@@ -121,7 +125,7 @@ mod tests {
 
         assert_eq!(
             result.unwrap_err(),
-            "GAME OVER, You guessed = 9, correct number was = 1"
+            "WRONG, You guessed = 9, correct number was = 1"
         );
     }
 }
